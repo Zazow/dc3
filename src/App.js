@@ -1,6 +1,10 @@
 import React from 'react';
 import logo from './logo.svg';
+import data from '../all-nodes.json';
 import './App.css';
+
+console.log(data);
+
 
 function App() {
   return (
