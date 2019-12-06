@@ -8,6 +8,7 @@ import useMediaQuery from '@material-ui/core/useMediaQuery';
 import { useTheme, makeStyles } from '@material-ui/core/styles';
 import { ResponsiveTreeMapCanvas } from '@nivo/treemap';
 import { FixedSizeList } from 'react-window';
+import BreadCrumbs from './Components/BreadCrumbs';
 
 function renderRow(props) {
   const { data, index, style } = props;
@@ -60,7 +61,6 @@ ListboxComponent.propTypes = {
 };
 */
 
-const MAX_HEIGHT = 100;
 
 function compileTree(data, id, height) {
   let children = data[id].children;
@@ -68,14 +68,20 @@ function compileTree(data, id, height) {
     name: data[id].name,
     loc: data[id].productCount,
     id: id,
+    height: height,
     children: []
   };
 
+  let allCategories = new Set([data[id].name]);
+
   for (let child of children) {
-    if (height + 1 < MAX_HEIGHT) {
-      root.children.push(compileTree(data, child, height + 1));
-    }
+    let childRoot = compileTree(data, child, height + 1);
+    root.children.push(childRoot);
+    allCategories = new Set([...allCategories, ...childRoot.categories]);
   }
+
+  root.categories = allCategories;
+
 
   return root;
 }
@@ -86,15 +92,22 @@ for (let node of data) {
     categories.push(node.name)
 }
 
+const colors = ['#E7C1A2', '#F27664', '#F1E066', '#E7A744', '#66CDBB', '#9AE3D5'];
 
 class App extends React.Component {
   constructor(props) {
     super(props);
+    let root = compileTree(data, 0, 0);
+    console.log(root);
     this.state = {
       selectedNodeID: 0,
-      root: compileTree(data, 0, 0)
+      root: root,
+      path: [root],
+      searchedNode: '9898dssds98ds9d8sd98s'
     }
   }
+
+
 
   render() {
     return (
@@ -110,8 +123,16 @@ class App extends React.Component {
         renderInput={params => (
           <TextField {...params} label="Combo box" variant="outlined" fullWidth />
         )}
+        onChange={(event, value) => {
+            this.setState({searchedNode: value}); 
+          }
+        }
         />
 
+        <BreadCrumbs path={this.state.path} onCatClicked={(index) => {
+          let path = this.state.path;
+          this.setState({path: path.slice(0, index + 1), root: path[index]});
+        }}/>
         {
         
         <div style={{ width: window.innerWidth,  height: window.innerHeight}}>
@@ -119,18 +140,30 @@ class App extends React.Component {
             root={this.state.root}
             identity="name"
             innerPadding={3}
-            outerPadding={3}
+            outerPadding={5}
             margin={{ top: 10, right: 10, bottom: 10, left: 10 }}
             label="name"
+            enableLabel={false}
             value='loc'
             labelFormat=".0s"
             labelSkipSize={12}
             labelTextColor={{ from: 'color', modifiers: [ [ 'darker', 1.2 ] ] }}
-            colors={{ scheme: 'nivo' }}
+            colors={node => {
+                if (node.categories.has(this.state.searchedNode) && (node.name !== this.state.root.name)) {
+                  return 'black';
+                }
+                else {
+                  return colors[node.height%colors.length]
+                }
+              }
+            }
             borderColor={{ from: 'color', modifiers: [ [ 'darker', 0.3 ] ] }}
             animate={true}
             onClick={(node) => {
-              console.log(node);
+              console.log('setting root node to', node.data);
+              let path = this.state.path;
+              path.push(node.data);
+              this.setState({root: node.data, path: path});
             }}
             motionStiffness={90}
             motionDamping={11}
@@ -142,5 +175,17 @@ class App extends React.Component {
     );
   }
 }
+
+
+/* <div style={{ width: window.innerWidth,  height: window.innerHeight}}>
+          <TreeMap
+            id="myTreeMap"
+            height={window.innerHeight}
+            width={window.innerWidth}
+            data={this.state.root}
+            valueUnit={"Products"}
+          />
+        </div> 
+        */
 
 export default App;
