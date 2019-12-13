@@ -656,12 +656,7 @@ var findNodeUnderCursor = function findNodeUnderCursor(nodes, margin, x, y) {
       else
         found = true;
   }
-  /*
-  return nodes.find(function (node) {
-    return isCursorInRect(node.x + margin.left, node.y + margin.top, node.width, node.height, x, y);
-  });
-  */
-};
+}
 var TreeMapCanvas =
 function (_Component) {
   _inherits(TreeMapCanvas, _Component);

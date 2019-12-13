@@ -6,7 +6,7 @@ import TextField from '@material-ui/core/TextField';
 import Autocomplete from '@material-ui/lab/Autocomplete';
 import useMediaQuery from '@material-ui/core/useMediaQuery';
 import { useTheme, makeStyles } from '@material-ui/core/styles';
-import { ResponsiveTreeMapCanvas } from '@nivo/treemap';
+import { ResponsiveTreeMapCanvas } from './Components/treemap';
 import { FixedSizeList } from 'react-window';
 import BreadCrumbs from './Components/BreadCrumbs';
 

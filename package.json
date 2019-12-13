@@ -5,13 +5,19 @@
   "dependencies": {
     "@material-ui/core": "^4.7.1",
     "@material-ui/lab": "^4.0.0-alpha.34",
-    "@nivo/treemap": "^0.59.0",
+    "@nivo/colors": "^0.60.0",
+    "@nivo/core": "^0.60.0",
+    "@nivo/tooltip": "^0.60.0",
+    "d3-hierarchy": "^1.1.9",
+    "lodash": "^4.17.15",
     "nivo": "^0.31.0",
     "react": "^16.12.0",
     "react-d3-treemap": "^1.0.15",
     "react-dom": "^16.12.0",
+    "react-motion": "^0.5.2",
     "react-scripts": "3.2.0",
-    "react-window": "^1.8.5"
+    "react-window": "^1.8.5",
+    "recompose": "^0.30.0"
   },
   "scripts": {
     "start": "react-scripts start",
