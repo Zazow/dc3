@@ -13,28 +13,34 @@ import Button from '@material-ui/core/Button';
 import AppBar from '@material-ui/core/AppBar';
 import Toolbar from '@material-ui/core/Toolbar';
 import Typography from '@material-ui/core/Typography';
+import CircularProgress from '@material-ui/core/CircularProgress';
 import SearchIcon from '@material-ui/icons/Search';
+import { InputAdornment } from '@material-ui/core';
 
 
 const useStyles = makeStyles(theme => ({
-  grow: {
-    flexGrow: 1,
+  root: {
+    flexGrow: 1
   },
-  menuButton: {
-    marginRight: theme.spacing(2),
+  grow: {
+    flexGrow: 1
   },
   title: {
     display: 'none',
     [theme.breakpoints.up('sm')]: {
       display: 'block',
-    },
+    }
+  },
+  dataText: {
+    position: "absolute",
+    right: 130
   },
   search: {
     position: 'relative',
     borderRadius: theme.shape.borderRadius,
-    backgroundColor: fade(theme.palette.common.white, 0.15),
+    backgroundColor: fade(theme.palette.common.white, 0.8),
     '&:hover': {
-      backgroundColor: fade(theme.palette.common.white, 0.25),
+      backgroundColor: fade(theme.palette.common.white, 0.9),
     },
     marginRight: theme.spacing(2),
     marginLeft: 0,
@@ -44,18 +50,6 @@ const useStyles = makeStyles(theme => ({
       width: 'auto',
     },
   },
-  searchIcon: {
-    width: theme.spacing(7),
-    height: '100%',
-    position: 'absolute',
-    pointerEvents: 'none',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  inputRoot: {
-    color: 'inherit',
-  },
   inputInput: {
     padding: theme.spacing(1, 1, 1, 7),
     transition: theme.transitions.create('width'),
@@ -63,6 +57,11 @@ const useStyles = makeStyles(theme => ({
     [theme.breakpoints.up('md')]: {
       width: 200,
     },
+  },
+  uploadButton: {
+    position: 'absolute',
+    wdith: 100,
+    right: 30
   },
   sectionDesktop: {
     display: 'none',
@@ -132,6 +131,14 @@ ListboxComponent.propTypes = {
 */
 
 
+function aggregateCategories(data) {
+  let cats = new Set();
+  for (let node of data) {
+    cats.add(node.name)
+  }
+  return Array.from(cats);
+}
+
 function compileTree(data, id, height) {
   let children = data[id].children;
   let root = {
@@ -162,29 +169,24 @@ const colors = ['#E7C1A2', '#F27664', '#F1E066', '#E7A744', '#66CDBB', '#9AE3D5'
 
 const App = () => {
   const [root, setRoot] = useState(compileTree(data, 0, 0));
-  let cats = [];
-  for (let node of data) {
-    cats.push(node.name)
-  }
-
-  const [categories, setCategories] = useState(cats);
+  const [fileName, setFileName] = useState("allNodes.json");
+  const [categories, setCategories] = useState(aggregateCategories(data));
   const [selectedNodeID, setSelectedNodeID] = useState(0);
   const [path, setPath] = useState([root]);
   const [searchedNode, setSearchedNode] = useState('oiuoiufg89du0sdig');
+  const [isLoadingData, setIsLoadingData] = useState(false);
    
   const handleFile = (file) => {
     if (file.type === "application/json") {
+      setIsLoadingData(true);
       let reader = new FileReader();
       reader.onload=(e)=> {
         let json = JSON.parse(e.target.result);
-        console.log(json);
-        let cats = [];
-        for (let node of json) {
-          cats.push(node.name)
-        }
-        setCategories(cats);
+        setCategories(aggregateCategories(json));
         setRoot(compileTree(json, 0, 0));
         setPath([root]);
+        setFileName(file.name);
+        setIsLoadingData(false);
       }
       reader.readAsText(file);
       let data = file
@@ -192,16 +194,15 @@ const App = () => {
       console.log(data);
     }
     else if (file.type === "application/vnd.ms-excel") {
+      setIsLoadingData(true);
       let reader = new FileReader();
       reader.onload = (e) => {
         let json = csv2json(e.target.result, {parseNumbers: true, parseJSON: true});
-        let cats = [];
-        for (let node of json) {
-          cats.push(node.name)
-        }
-        setCategories(cats);
+        setCategories(aggregateCategories(json));
         setRoot(compileTree(json, 0, 0));
         setPath([root]);
+        setFileName(file.name);
+        setIsLoadingData(false);
       }
       reader.readAsText(file);
     }
@@ -212,33 +213,35 @@ const App = () => {
 
   const classes = useStyles();
   return (
-    <div className="App">
+    <div className="App" class={classes.root}>
 
-    <AppBar position="static">
+    <AppBar position="static" color="primary">
       <Toolbar>
         <Typography
           className={classes.title}
-          variant="h6" noWrap>
+          variant="h5" noWrap>
           DC3 Final Handin
         </Typography>
-        <div className={classes.search}>
-          <div className={classes.searchIcon}>
-            <SearchIcon />
-          </div>
+        <div class={classes.search}>
           <Autocomplete
-            id="combo-box-demo"
             options={categories}
-            classes={{
-              root: classes.inputRoot,
-              input: classes.inputInput,
-            }}
-            placeholder="Search…"
-            getOptionLabel={option => option}
-            style={{ width: 300 }}
+            style={{width: 300}}
             disableListWrap
             ListboxComponent={ListboxComponent}
             renderInput={params => (
-              <TextField {...params} label="Combo box" variant="outlined" fullWidth />
+              <TextField 
+                {...params} 
+                label="Search"
+                variant="outlined"
+                // InputProps={{
+                //   startAdornment: (
+                //     <InputAdornment position="start">
+                //       <SearchIcon />
+                //     </InputAdornment>
+                //   )
+                // }}
+                fullWidth 
+              />
             )}
             onChange={(event, value) => {
                 setSearchedNode(value);
@@ -246,37 +249,51 @@ const App = () => {
             }
           />
         </div>
-        
-        <Button color="inherit">Login</Button>
+
+            
+        <Typography
+          className={classes.dataText}
+          variant="h7" noWrap
+        >
+          Currently using: {fileName} | Got different data?
+        </Typography>
+      
+        <div class={classes.uploadButton}> 
+          <input
+            accept=".csv, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel, .json "
+            style={{display: 'none'}}
+            id="contained-button-file"
+            multiple
+            type="file"
+            onChange={(e)=>{
+              handleFile(e.target.files[0]);
+            }}
+          />
+          <label htmlFor="contained-button-file">
+            <Button variant="contained" color="secondary" component="span">
+              Upload
+            </Button>
+          </label>
+        </div>
       </Toolbar>
     </AppBar>
 
     
 
       <BreadCrumbs path={path} onCatClicked={(index) => {
-        setPath(path.slice(0, index + 1));
-        setRoot(path[index]);
-      }}/>
-
-      <input
-        accept=".csv, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel, .json "
-        style={{display: 'none'}}
-        id="contained-button-file"
-        multiple
-        type="file"
-        onChange={(e)=>{
-          handleFile(e.target.files[0]);
+          setPath(path.slice(0, index + 1));
+          setRoot(path[index]);
         }}
+        style={{padding: 10, paddingBottom: 0}}
       />
-      <label htmlFor="contained-button-file">
-        <Button variant="contained" color="primary" component="span">
-          Upload
-        </Button>
-      </label>
-      {
-        
+
       
-      <div style={{ width: '1400px',  height: '1000px'}}>
+      {
+      isLoadingData? 
+      <div style={{textAlign: 'center'}}>
+        <CircularProgress size={200}/>
+      </div>:
+      <div style={{ width: '100%', height: window.innerHeight - 150}}>
         <ResponsiveTreeMapCanvas
           root={root}
           identity="name"
