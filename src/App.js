@@ -307,8 +307,10 @@ const App = () => {
           labelSkipSize={12}
           labelTextColor={{ from: 'color', modifiers: [ [ 'darker', 1.2 ] ] }}
           colors={node => {
-              if (node.categories.has(searchedNode) && (node.name !== root.name)) {
-                return 'black';
+              if (node.categories.has(searchedNode)) {
+                console.log(node);
+                let val = (node.height - root.height)*50;
+                return "rgb("+val+","+val+","+val+")";
               }
               else {
                 return colors[node.height%colors.length]
