@@ -11,7 +11,7 @@ import { FixedSizeList } from 'react-window';
 import BreadCrumbs from './Components/BreadCrumbs';
 import Button from '@material-ui/core/Button';
 
-const csv = require("csvtojson");
+const csv2json = require('csvjson-csv2json');
 
 function renderRow(props) {
   const { data, index, style } = props;
@@ -119,6 +119,7 @@ class App extends React.Component {
       let reader = new FileReader();
       reader.onload=(e)=> {
         let json = JSON.parse(e.target.result);
+        console.log(json);
         let root = compileTree(json, 0, 0);
         let categories = [];
         for (let node of json) {
@@ -134,9 +135,13 @@ class App extends React.Component {
     else if (file.type === "application/vnd.ms-excel") {
       let reader = new FileReader();
       reader.onload = (e) => {
-        csv({flatKeys: true}).fromString(e.target.result).then((json) => {
-          console.log(json);
-        });
+        let json = csv2json(e.target.result, {parseNumbers: true, parseJSON: true});
+        let root = compileTree(json, 0, 0);
+        let categories = [];
+        for (let node of json) {
+          categories.push(node.name)
+        }
+        this.setState({categories, root, path: [root]});
       }
       reader.readAsText(file);
     }

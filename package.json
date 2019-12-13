@@ -9,6 +9,7 @@
     "@nivo/colors": "^0.60.0",
     "@nivo/core": "^0.60.0",
     "@nivo/tooltip": "^0.60.0",
+    "csvjson-csv2json": "^5.0.6",
     "csvtojson": "^2.0.10",
     "d3-hierarchy": "^1.1.9",
     "express": "^4.17.1",
