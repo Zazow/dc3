@@ -9,6 +9,9 @@ import { useTheme, makeStyles } from '@material-ui/core/styles';
 import { ResponsiveTreeMapCanvas } from './Components/treemap';
 import { FixedSizeList } from 'react-window';
 import BreadCrumbs from './Components/BreadCrumbs';
+import Button from '@material-ui/core/Button';
+
+const csv = require("csvtojson");
 
 function renderRow(props) {
   const { data, index, style } = props;
@@ -86,11 +89,7 @@ function compileTree(data, id, height) {
   return root;
 }
 
-let categories = []
 
-for (let node of data) {
-    categories.push(node.name)
-}
 
 const colors = ['#E7C1A2', '#F27664', '#F1E066', '#E7A744', '#66CDBB', '#9AE3D5'];
 
@@ -98,9 +97,15 @@ class App extends React.Component {
   constructor(props) {
     super(props);
     let root = compileTree(data, 0, 0);
-    console.log(root);
+    let categories = [];
+
+    for (let node of data) {
+        categories.push(node.name)
+    }
+
     this.state = {
       selectedNodeID: 0,
+      categories: categories,
       root: root,
       path: [root],
       searchedNode: '9898dssds98ds9d8sd98s'
@@ -109,13 +114,44 @@ class App extends React.Component {
 
 
 
+  uploadFile(file) {
+    if (file.type === "application/json") {
+      let reader = new FileReader();
+      reader.onload=(e)=> {
+        let json = JSON.parse(e.target.result);
+        let root = compileTree(json, 0, 0);
+        let categories = [];
+        for (let node of json) {
+          categories.push(node.name)
+        }
+        this.setState({categories, root, path: [root]});
+      }
+      reader.readAsText(file);
+      let data = file
+      //let newRoot = compileTree()
+      console.log(data);
+    }
+    else if (file.type === "application/vnd.ms-excel") {
+      let reader = new FileReader();
+      reader.onload = (e) => {
+        csv({flatKeys: true}).fromString(e.target.result).then((json) => {
+          console.log(json);
+        });
+      }
+      reader.readAsText(file);
+    }
+    else {
+      console.log(file.type);
+    }
+  }
+
   render() {
     return (
       <div className="App">
 
         <Autocomplete
         id="combo-box-demo"
-        options={categories}
+        options={this.state.categories}
         getOptionLabel={option => option}
         style={{ width: 300 }}
         disableListWrap
@@ -133,9 +169,26 @@ class App extends React.Component {
           let path = this.state.path;
           this.setState({path: path.slice(0, index + 1), root: path[index]});
         }}/>
+
+        <input
+          accept=".csv, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel, .json "
+          style={{display: 'none'}}
+          id="contained-button-file"
+          multiple
+          type="file"
+          onChange={(e)=>{
+            this.uploadFile(e.target.files[0]);
+          }}
+        />
+        <label htmlFor="contained-button-file">
+          <Button variant="contained" color="primary" component="span">
+            Upload
+          </Button>
+        </label>
         {
+          
         
-        <div style={{ width: window.innerWidth,  height: window.innerHeight}}>
+        <div style={{ width: '1400px',  height: '1000px'}}>
           <ResponsiveTreeMapCanvas
             root={this.state.root}
             identity="name"
