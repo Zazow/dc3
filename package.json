@@ -5,6 +5,7 @@
   "homepage": "https://zazow.github.io/dc3",
   "dependencies": {
     "@material-ui/core": "^4.7.1",
+    "@material-ui/icons": "^4.5.1",
     "@material-ui/lab": "^4.0.0-alpha.34",
     "@nivo/colors": "^0.60.0",
     "@nivo/core": "^0.60.0",

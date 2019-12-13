@@ -1,15 +1,82 @@
-import React from 'react';
+import React, {useState} from 'react';
 import logo from './logo.svg';
 import data from "./csvjson.json"
 import './App.css';
 import TextField from '@material-ui/core/TextField';
 import Autocomplete from '@material-ui/lab/Autocomplete';
 import useMediaQuery from '@material-ui/core/useMediaQuery';
-import { useTheme, makeStyles } from '@material-ui/core/styles';
+import { useTheme, makeStyles, fade } from '@material-ui/core/styles';
 import { ResponsiveTreeMapCanvas } from './Components/treemap';
 import { FixedSizeList } from 'react-window';
 import BreadCrumbs from './Components/BreadCrumbs';
 import Button from '@material-ui/core/Button';
+import AppBar from '@material-ui/core/AppBar';
+import Toolbar from '@material-ui/core/Toolbar';
+import Typography from '@material-ui/core/Typography';
+import SearchIcon from '@material-ui/icons/Search';
+
+
+const useStyles = makeStyles(theme => ({
+  grow: {
+    flexGrow: 1,
+  },
+  menuButton: {
+    marginRight: theme.spacing(2),
+  },
+  title: {
+    display: 'none',
+    [theme.breakpoints.up('sm')]: {
+      display: 'block',
+    },
+  },
+  search: {
+    position: 'relative',
+    borderRadius: theme.shape.borderRadius,
+    backgroundColor: fade(theme.palette.common.white, 0.15),
+    '&:hover': {
+      backgroundColor: fade(theme.palette.common.white, 0.25),
+    },
+    marginRight: theme.spacing(2),
+    marginLeft: 0,
+    width: '100%',
+    [theme.breakpoints.up('sm')]: {
+      marginLeft: theme.spacing(3),
+      width: 'auto',
+    },
+  },
+  searchIcon: {
+    width: theme.spacing(7),
+    height: '100%',
+    position: 'absolute',
+    pointerEvents: 'none',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  inputRoot: {
+    color: 'inherit',
+  },
+  inputInput: {
+    padding: theme.spacing(1, 1, 1, 7),
+    transition: theme.transitions.create('width'),
+    width: '100%',
+    [theme.breakpoints.up('md')]: {
+      width: 200,
+    },
+  },
+  sectionDesktop: {
+    display: 'none',
+    [theme.breakpoints.up('md')]: {
+      display: 'flex',
+    },
+  },
+  sectionMobile: {
+    display: 'flex',
+    [theme.breakpoints.up('md')]: {
+      display: 'none',
+    },
+  },
+}));
 
 const csv2json = require('csvjson-csv2json');
 
@@ -93,39 +160,31 @@ function compileTree(data, id, height) {
 
 const colors = ['#E7C1A2', '#F27664', '#F1E066', '#E7A744', '#66CDBB', '#9AE3D5'];
 
-class App extends React.Component {
-  constructor(props) {
-    super(props);
-    let root = compileTree(data, 0, 0);
-    let categories = [];
-
-    for (let node of data) {
-        categories.push(node.name)
-    }
-
-    this.state = {
-      selectedNodeID: 0,
-      categories: categories,
-      root: root,
-      path: [root],
-      searchedNode: '9898dssds98ds9d8sd98s'
-    }
+const App = () => {
+  const [root, setRoot] = useState(compileTree(data, 0, 0));
+  let cats = [];
+  for (let node of data) {
+    cats.push(node.name)
   }
 
-
-
-  uploadFile(file) {
+  const [categories, setCategories] = useState(cats);
+  const [selectedNodeID, setSelectedNodeID] = useState(0);
+  const [path, setPath] = useState([root]);
+  const [searchedNode, setSearchedNode] = useState('oiuoiufg89du0sdig');
+   
+  const handleFile = (file) => {
     if (file.type === "application/json") {
       let reader = new FileReader();
       reader.onload=(e)=> {
         let json = JSON.parse(e.target.result);
         console.log(json);
-        let root = compileTree(json, 0, 0);
-        let categories = [];
+        let cats = [];
         for (let node of json) {
-          categories.push(node.name)
+          cats.push(node.name)
         }
-        this.setState({categories, root, path: [root]});
+        setCategories(cats);
+        setRoot(compileTree(json, 0, 0));
+        setPath([root]);
       }
       reader.readAsText(file);
       let data = file
@@ -136,12 +195,13 @@ class App extends React.Component {
       let reader = new FileReader();
       reader.onload = (e) => {
         let json = csv2json(e.target.result, {parseNumbers: true, parseJSON: true});
-        let root = compileTree(json, 0, 0);
-        let categories = [];
+        let cats = [];
         for (let node of json) {
-          categories.push(node.name)
+          cats.push(node.name)
         }
-        this.setState({categories, root, path: [root]});
+        setCategories(cats);
+        setRoot(compileTree(json, 0, 0));
+        setPath([root]);
       }
       reader.readAsText(file);
     }
@@ -150,88 +210,110 @@ class App extends React.Component {
     }
   }
 
-  render() {
-    return (
-      <div className="App">
+  const classes = useStyles();
+  return (
+    <div className="App">
 
-        <Autocomplete
-        id="combo-box-demo"
-        options={this.state.categories}
-        getOptionLabel={option => option}
-        style={{ width: 300 }}
-        disableListWrap
-        ListboxComponent={ListboxComponent}
-        renderInput={params => (
-          <TextField {...params} label="Combo box" variant="outlined" fullWidth />
-        )}
-        onChange={(event, value) => {
-            this.setState({searchedNode: value}); 
-          }
-        }
-        />
-
-        <BreadCrumbs path={this.state.path} onCatClicked={(index) => {
-          let path = this.state.path;
-          this.setState({path: path.slice(0, index + 1), root: path[index]});
-        }}/>
-
-        <input
-          accept=".csv, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel, .json "
-          style={{display: 'none'}}
-          id="contained-button-file"
-          multiple
-          type="file"
-          onChange={(e)=>{
-            this.uploadFile(e.target.files[0]);
-          }}
-        />
-        <label htmlFor="contained-button-file">
-          <Button variant="contained" color="primary" component="span">
-            Upload
-          </Button>
-        </label>
-        {
-          
-        
-        <div style={{ width: '1400px',  height: '1000px'}}>
-          <ResponsiveTreeMapCanvas
-            root={this.state.root}
-            identity="name"
-            innerPadding={3}
-            outerPadding={5}
-            margin={{ top: 10, right: 10, bottom: 10, left: 10 }}
-            label="name"
-            enableLabel={false}
-            value='loc'
-            labelFormat=".0s"
-            labelSkipSize={12}
-            labelTextColor={{ from: 'color', modifiers: [ [ 'darker', 1.2 ] ] }}
-            colors={node => {
-                if (node.categories.has(this.state.searchedNode) && (node.name !== this.state.root.name)) {
-                  return 'black';
-                }
-                else {
-                  return colors[node.height%colors.length]
-                }
+    <AppBar position="static">
+      <Toolbar>
+        <Typography
+          className={classes.title}
+          variant="h6" noWrap>
+          DC3 Final Handin
+        </Typography>
+        <div className={classes.search}>
+          <div className={classes.searchIcon}>
+            <SearchIcon />
+          </div>
+          <Autocomplete
+            id="combo-box-demo"
+            options={categories}
+            classes={{
+              root: classes.inputRoot,
+              input: classes.inputInput,
+            }}
+            placeholder="Search…"
+            getOptionLabel={option => option}
+            style={{ width: 300 }}
+            disableListWrap
+            ListboxComponent={ListboxComponent}
+            renderInput={params => (
+              <TextField {...params} label="Combo box" variant="outlined" fullWidth />
+            )}
+            onChange={(event, value) => {
+                setSearchedNode(value);
               }
             }
-            borderColor={{ from: 'color', modifiers: [ [ 'darker', 0.3 ] ] }}
-            animate={true}
-            onClick={(node) => {
-              console.log('setting root node to', node.data);
-              let path = this.state.path;
-              path.push(node.data);
-              this.setState({root: node.data, path: path});
-            }}
-            motionStiffness={90}
-            motionDamping={11}
           />
         </div>
+        
+        <Button color="inherit">Login</Button>
+      </Toolbar>
+    </AppBar>
+
+    
+
+      <BreadCrumbs path={path} onCatClicked={(index) => {
+        setPath(path.slice(0, index + 1));
+        setRoot(path[index]);
+      }}/>
+
+      <input
+        accept=".csv, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel, .json "
+        style={{display: 'none'}}
+        id="contained-button-file"
+        multiple
+        type="file"
+        onChange={(e)=>{
+          handleFile(e.target.files[0]);
+        }}
+      />
+      <label htmlFor="contained-button-file">
+        <Button variant="contained" color="primary" component="span">
+          Upload
+        </Button>
+      </label>
+      {
+        
       
-        }
+      <div style={{ width: '1400px',  height: '1000px'}}>
+        <ResponsiveTreeMapCanvas
+          root={root}
+          identity="name"
+          innerPadding={3}
+          outerPadding={5}
+          margin={{ top: 10, right: 10, bottom: 10, left: 10 }}
+          label="name"
+          enableLabel={false}
+          value='loc'
+          labelFormat=".0s"
+          labelSkipSize={12}
+          labelTextColor={{ from: 'color', modifiers: [ [ 'darker', 1.2 ] ] }}
+          colors={node => {
+              if (node.categories.has(searchedNode) && (node.name !== root.name)) {
+                return 'black';
+              }
+              else {
+                return colors[node.height%colors.length]
+              }
+            }
+          }
+          borderColor={{ from: 'color', modifiers: [ [ 'darker', 0.3 ] ] }}
+          animate={true}
+          onClick={(node) => {
+            console.log('setting root node to', node.data);
+            path.push(node.data);
+            setPath(path);
+            setRoot(node.data);
+          }}
+          motionStiffness={90}
+          motionDamping={11}
+        />
       </div>
-    );
-  }
+    
+      }
+    </div>
+  );
 }
 
 
