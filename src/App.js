@@ -177,7 +177,10 @@ const App = () => {
   const [isLoadingData, setIsLoadingData] = useState(false);
    
   const handleFile = (file) => {
-    if (file.type === "application/json") {
+    let parts = file.name.split('.');
+    let fileExtension = parts[parts.length - 1].toLowerCase();
+    console.log(fileExtension);
+    if (fileExtension === "json") {
       setIsLoadingData(true);
       let reader = new FileReader();
       reader.onload=(e)=> {
@@ -193,7 +196,7 @@ const App = () => {
       //let newRoot = compileTree()
       console.log(data);
     }
-    else if (file.type === "application/vnd.ms-excel") {
+    else if (fileExtension === "csv" || fileExtension === "xls" || fileExtension === "xlsx") {
       setIsLoadingData(true);
       let reader = new FileReader();
       reader.onload = (e) => {
@@ -207,7 +210,7 @@ const App = () => {
       reader.readAsText(file);
     }
     else {
-      console.log(file.type);
+      console.log(fileExtension);
     }
   }
 
@@ -309,7 +312,7 @@ const App = () => {
           colors={node => {
               if (node.categories.has(searchedNode)) {
                 console.log(node);
-                let val = (node.height - root.height)*50;
+                let val = (node.height - root.height)*60;
                 return "rgb("+val+","+val+","+val+")";
               }
               else {
