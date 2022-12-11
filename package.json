@@ -13,7 +13,7 @@
     "csvjson-csv2json": "^5.0.6",
     "csvtojson": "^2.0.10",
     "d3-hierarchy": "^1.1.9",
-    "express": "^4.17.1",
+    "express": "^4.17.3",
     "lodash": "^4.17.15",
     "nivo": "^0.31.0",
     "react": "^16.12.0",
